@@ -49,11 +49,9 @@ class BoxOffice(implicit timeout: Timeout) extends Actor {
 
     //<start id="ch02_get_tickets"/>
     case GetTickets(event, tickets) =>
-      def notFound() = sender() ! TicketSeller.Tickets(event) //<co id="ch02_send_empty_if_notfound"/>
-      def buy(child: ActorRef) =
-        child.forward(TicketSeller.Buy(tickets)) //<co id="ch02_buy_from_child"/>
-
-      context.child(event).fold(notFound())(buy) //<co id="ch02_buy_or_respond_with_notfound"/>
+      context.child(event).fold {
+        sender() ! TicketSeller.Tickets(event)
+      } { child => child.forward(TicketSeller.Buy(tickets)) } //<co id="ch02_buy_or_respond_with_notfound"/>
       //<end id="ch02_get_tickets"/>
 
     case GetEvent(event) =>
@@ -72,7 +70,7 @@ class BoxOffice(implicit timeout: Timeout) extends Actor {
       def convertToEvents(f: Future[Iterable[Option[Event]]]) =
         f.map(_.flatten).map(l=> Events(l.toVector)) //<co id="ch02_flatten_options"/>
 
-      pipe(convertToEvents(Future.sequence(getEvents))) to sender() //<co id="ch02_sequence_futures"/>
+      convertToEvents(Future.sequence(getEvents)) pipeTo sender() //<co id="ch02_sequence_futures"/>
       //<end id="ch02_get_events"/>
 
     case CancelEvent(event) =>

@@ -1,5 +1,3 @@
-enablePlugins(JavaServerAppPackaging) //<co id="example-enable-sbt-native-packager"/>
-
 name := "goticks"
 
 version := "1.0"
